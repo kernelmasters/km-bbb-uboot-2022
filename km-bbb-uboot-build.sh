@@ -82,6 +82,22 @@ else
     sudo apt install flex
 fi
 
+if [ "$1" = "clean" ]; then
+	echo "${Green}-----------------------------"
+	echo "${Red}Running distclean on working tree:"
+	echo "${Green}-----------------------------${NC}"
+        echo "${Purple}make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- distclean${NC}"
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- distclean
+
+	# Regenerate tags file since it will be cleared out during clean
+	echo "";echo""
+	echo "Generating tags ...."
+	ctags -R
+	echo "Done."
+	echo "";echo""
+	exit
+fi
+
 echo "${BRed}${BRedU}Step2: U-boot source code configuration${NC}"
 echo ""
 echo "${Green}-----------------------------"
@@ -122,3 +138,12 @@ echo "${Red}Build uboot source code"
 echo "${Red}make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j${cpus}${NC}"
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j${cpus}
 echo "";echo""
+
+
+# Regenerate tags file if it is not already present
+if [ ! -f tags ] ; then
+	echo "Generating tags ...."
+	ctags -R
+	echo "Done."
+fi
+echo "";echo ""
