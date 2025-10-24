@@ -19,6 +19,47 @@ config NOR
 	  In practice this is seen as a NOR flash module connected to the
 	  "memory cape" for the BeagleBone family.
 
+config KM_BBB_LED_SWITCHES
+	bool "Enable KM BBB Expansion board's LED and switches"
+	default n
+	help
+	  This option will enable the LED and user switches on the expansion
+	  board for BeagleBone Black developed by Kernel Masters.
+
+config KM_BBB_2x16_CHAR_LCD
+	bool "Enable KM BBB Expansion board's 2x16 character LCD"
+	default n
+	help
+	  This option will enable the 2x16 character LCD on the expansion
+	  board for BeagleBone Black developed by Kernel Masters.
+
+config KM_BBB_SPI_TFT_LCD
+	bool "Enable KM BBB Expansion board's TFT LCD on SPI Interface"
+	default n
+	help
+	  This option will enable the TFT LCD to work on SPI on the expansion
+	  board for BeagleBone Black developed by Kernel Masters.
+
+config KM_BBB_MATRIX_KEYPAD
+	bool "Enable KM BBB Expansion board's Matrix Keypad"
+	default n
+	help
+	  This option will enable the Matrix Keypad on the expansion
+	  board for BeagleBone Black developed by Kernel Masters.
+
+config KM_BBB_ADXL345_INTERRUPT
+	bool "Enable KM BBB Expansion board's ADXL345 Interrupt"
+	default n
+
+config KM_BBB_ENC28J60_INTERRUPT
+	bool "Enable KM BBB Expansion board's ENC28J60 Interrupt"
+	depends on KM_BBB_ENC28J60
+	default n
+
+config KM_BBB_RS485_CONTROL
+	bool "Enable KM BBB Expansion board's RS485 Control Pin"
+	default n
+
 source "board/ti/common/Kconfig"
 
 endif
