@@ -22,6 +22,85 @@
 #include "../common/board_detect.h"
 #include "board.h"
 
+
+
+#ifdef CONFIG_KM_BBB_LED_SWITCHES
+static struct module_pin_mux led_sw_buzz_pin_mux[] = {
+	/*
+	 * ENTER/USER switch is configured to internal PULL_DOWN.
+	 * UP and DOWN switches are configured to internal PULL_UP.
+	 * LED can be used with either no PULL or PULL_UP.
+	 * BUZZER doesn't need any kind of PULL enabled.
+	 */
+	{OFFSET(lcd_data15), (MODE(7) | RXACTIVE | PULLUDEN | PULLDOWN_EN)},   	/* KM-SW_USER -- GPIO0_11 */
+	{OFFSET(gpmc_ad10), (MODE(7)  | RXACTIVE | PULLUDEN | PULLUP_EN)},   	/* KM-SW_UP -- GPIO0_26 */
+	{OFFSET(gpmc_ad11), (MODE(7)  | RXACTIVE | PULLUDEN | PULLUP_EN)},   	/* KM-SW_DOWN -- GPIO0_27 */
+	{OFFSET(lcd_data14), (MODE(7))},               				/* KM-USER_LED -- GPIO0_10 */
+	{OFFSET(lcd_data13), (MODE(7))},                            		/* KM-buzzer -- GPIO0_9 */
+	{-1},
+};
+#endif
+
+#ifdef CONFIG_KM_BBB_2x16_CHAR_LCD
+static struct module_pin_mux char_lcd_pin_mux[] = {
+        {OFFSET(gpmc_ad12), (MODE(7) | PULLUDEN | PULLUP_EN)},   /* KM-LCD_D4 -- GPIO1_12 */
+        {OFFSET(gpmc_ad13), (MODE(7) | PULLUDEN | PULLUP_EN)},   /* KM-LCD_D5 -- GPIO1_13 */
+        {OFFSET(gpmc_ad14), (MODE(7) | PULLUDEN | PULLUP_EN)},   /* KM-LCD_D6 -- GPIO1_14 */
+        {OFFSET(gpmc_ad15), (MODE(7) | PULLUDEN | PULLUP_EN)},   /* KM-LCD_D7 -- GPIO1_15 */
+        {OFFSET(lcd_vsync), (MODE(7) | PULLUDEN | PULLUP_EN)},   /* KM-LCD_RS -- GPIO2_22 */
+        {OFFSET(lcd_pclk),  (MODE(7) | PULLUDEN | PULLUP_EN)},   /* KM-LCD_EN -- GPIO2_24 */
+        {OFFSET(lcd_hsync), (MODE(7) | PULLUDEN | PULLUP_EN)},   /* KM-LCD_RW -- GPIO2_23 */
+	{-1},
+};
+#endif
+
+#ifdef CONFIG_KM_BBB_SPI_TFT_LCD
+static struct module_pin_mux tft_lcd_pin_mux[] = {
+	{-1},
+};
+#endif
+
+#ifdef CONFIG_KM_BBB_MATRIX_KEYPAD
+static struct module_pin_mux matrix_keypad_pin_mux[] = {
+        {OFFSET(lcd_data0), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -0
+        {OFFSET(lcd_data1), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -1
+        {OFFSET(lcd_data2), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -2
+        {OFFSET(lcd_data3), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -3
+        {OFFSET(lcd_data4), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -4
+        {OFFSET(lcd_data5), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -5
+        {OFFSET(lcd_data6), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -6
+        {OFFSET(lcd_data7), (MODE(7) |RXACTIVE | PULLUP_EN)},  	//KM-keypad -7
+        {OFFSET(lcd_ac_bias_en), (MODE(7) | RXACTIVE | PULLUP_EN)},  	//KM-keypad -8
+	{-1},
+};
+#endif
+
+#ifdef CONFIG_KM_BBB_ADXL345_INTERRUPT
+static struct module_pin_mux adxl345_int_pin_mux[] = {
+	{OFFSET(gpmc_a0), (MODE(7)| RXACTIVE | PULLUDEN | PULLDOWN_EN)},/* gpmc_a0 */  //-->ADXL interrupt
+	{-1},
+};
+#endif
+
+#ifdef CONFIG_KM_BBB_ENC28J60_INTERRUPT
+static struct module_pin_mux enc28j60_int_pin_mux[] = {
+	{OFFSET(gpmc_a1), (MODE(7)| RXACTIVE | PULLUDEN | PULLDOWN_EN)},/* gpmc_a1 */  //-->Enc interrupt
+	{-1},
+};
+#endif
+
+#ifdef CONFIG_KM_BBB_RS485_CONTROL
+static struct module_pin_mux rs485_ctl_pin_mux[] = {
+	{OFFSET(gpmc_be1n), (MODE(7))},                          /* gpmc_be1n */  //-->RS485_ctl
+	{-1},
+};
+#endif
+
+
+
+
+
+
 static struct module_pin_mux uart0_pin_mux[] = {
 	{OFFSET(uart0_rxd), (MODE(0) | PULLUP_EN | RXACTIVE)},	/* UART0_RXD */
 	{OFFSET(uart0_txd), (MODE(0) | PULLUDEN)},		/* UART0_TXD */
@@ -140,6 +219,21 @@ static struct module_pin_mux spi0_pin_mux[] = {
 			PULLUDEN | PULLUP_EN)},			/* SPI0_CS0 */
 	{-1},
 };
+
+static struct module_pin_mux spi1_pin_mux[] = {
+        {OFFSET(mcasp0_ahclkr),(MODE(3) | RXACTIVE  | PULLUDEN)},                   /* KM-SPI1_CS0  */
+	{OFFSET(mcasp0_fsx),   (MODE(3) | RXACTIVE  | PULLUDEN )},                  /* KM-SPI1_D0   */
+	{OFFSET(mcasp0_axr0),  (MODE(3) | PULLUP_EN | RXACTIVE )},                  /* KM-SPI1_D1   */
+	{OFFSET(mcasp0_aclkx), (MODE(3) | RXACTIVE  | PULLUP_EN)},                  /* KM-SPI1_CLK  */
+	{-1},
+};
+
+static struct module_pin_mux can0_pin_mux[] = {
+	{OFFSET(uart1_ctsn), (MODE(2) | RXACTIVE |PULLUP_EN | PULLUDEN )},	/* uart1_ctsn */ //KM-CAN0-TX
+	{OFFSET(uart1_rtsn), (MODE(2) | RXACTIVE |PULLUP_EN | PULLUDEN )},	/* uart1_rtsn */ //KM-CAN0-RX
+	{-1},
+};
+
 
 static struct module_pin_mux gpio0_7_pin_mux[] = {
 	{OFFSET(ecap0_in_pwm0_out), (MODE(7) | PULLUDEN)},	/* GPIO0_7 */
@@ -315,6 +409,12 @@ void enable_i2c0_pin_mux(void)
 	configure_module_pin_mux(i2c0_pin_mux);
 }
 
+void enable_i2c1_pin_mux(void)
+{
+        configure_module_pin_mux(i2c1_pin_mux);
+}
+
+
 void enable_i2c2_pin_mux(void)
 {
 	configure_module_pin_mux(i2c2_pin_mux);
@@ -356,7 +456,42 @@ static unsigned short detect_daughter_board_profile(void)
 	return (1 << (val & PROFILE_MASK));
 }
 
+
+void km_bbb_mux(void)
+{
+	/*
+	configure_module_pin_mux(gpio_interrupt_pin_mux);
+	configure_module_pin_mux(mmc0_pin_mux);
+	configure_module_pin_mux(mmc1_pin_mux);
+	configure_module_pin_mux(keypad_mux);
+	configure_module_pin_mux(uart1_pin_mux);
+	configure_module_pin_mux(uart2_pin_mux);
+	configure_module_pin_mux(uart4_pin_mux); // RS485
+	configure_module_pin_mux(uart5_pin_mux);
+	configure_module_pin_mux(i2c1_pin_mux);
+	configure_module_pin_mux(spi1_pin_mux);
+	configure_module_pin_mux(can0_pin_mux);
+	configure_module_pin_mux(mii1_pin_mux);
+	 */
+
+#ifdef CONFIG_KM_BBB_LED_SWITCHES
+	configure_module_pin_mux(led_sw_buzz_pin_mux);
+#endif
+#ifdef CONFIG_KM_BBB_2x16_CHAR_LCD
+	configure_module_pin_mux(char_lcd_pin_mux);
+#endif
+	configure_module_pin_mux(i2c1_pin_mux);
+	configure_module_pin_mux(i2c2_pin_mux);
+}
+
 void enable_board_pin_mux(void)
+{
+	/* KM BBB mux/pad configuration. */
+	km_bbb_mux();
+
+}
+
+void bbb_enable_board_pin_mux(void)
 {
 	/* Do board-specific muxes. */
 	if (board_is_beaglelogic()) {

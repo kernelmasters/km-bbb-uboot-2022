@@ -1340,6 +1340,7 @@ int board_late_init(void)
 	if (board_is_bone_lt()) {
 		puts("Board: BeagleBone Black\n");
 		name = "A335BNLT";
+		set_mux_conf_regs();
 		/* BeagleBoard.org BeagleBone Black Wireless: */
 		if (!strncmp(board_ti_get_rev(), "BWA", 3)) {
 			name = "BBBW";
