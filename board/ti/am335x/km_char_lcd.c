@@ -135,6 +135,49 @@ int lcd_bootmenu(int Boot_Selection){
 		return 0;
 	}
 
+	switch(Boot_Selection) {
+                case STAY_BOOT:
+			 HD44780_Str_XY(0, 0, "  Boot Sequence ");
+			 HD44780_Str_XY(0, 1, "                ");
+			 HD44780_Str_XY(0, 1, "Stay @ uboot cmd");
+			 printf("To enter bootmenu, run \"km_bootmenu\" command\n");
+                         break;
+                case SD_CARD_BOOT:
+			 HD44780_Str_XY(0, 0, "  Boot Sequence ");
+			 HD44780_Str_XY(0, 1, "                ");
+                         HD44780_Str_XY(0, 1, "Boot From SDcard");
+                         break;
+                case EMMC_BOOT:
+			 HD44780_Str_XY(0, 0, "  Boot Sequence ");
+			 HD44780_Str_XY(0, 1, "                ");
+                         HD44780_Str_XY(0, 1, "Boot From Emmc");
+                         break;
+                case TFTP_BOOT:
+			 HD44780_Str_XY(0, 0, "  Boot Sequence ");
+			 HD44780_Str_XY(0, 1, "                ");
+                         HD44780_Str_XY(0, 1, "Boot From TFTP");
+                         break;
+                case KGDB_KDB:
+			 HD44780_Str_XY(0,0,"  Boot Sequence ");
+			 HD44780_Str_XY(0, 1, "                ");
+			 HD44780_Str_XY(0,1,"Boot - KGDB_KDB");
+                         break;
+                case ETH_ACT:
+			 HD44780_Str_XY(0, 0, "  Boot Sequence ");
+			 HD44780_Str_XY(0, 1, "                ");
+                         HD44780_Str_XY(0, 1, "Boot Ethernet");
+                         break;
+		case SERIAL:
+			 HD44780_Str_XY(0,0,"  Boot Sequence ");
+			 HD44780_Str_XY(0,1,"                ");
+                         HD44780_Str_XY(0,1,"Boot from SERIAL");
+                         break;
+                default:
+                         HD44780_ClrScr();
+                         HD44780_Str_XY(0, 1, "Choice Corect opt");
+                         break;
+	}
+
 	udelay(1000);
 	udelay(1000);
 	udelay(1000);

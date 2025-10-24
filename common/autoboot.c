@@ -26,6 +26,10 @@
 #include <crypt.h>
 #include <dm/ofnode.h>
 
+// Kernel Masters BBB headers
+#include <km_bbb_bootenv.h>
+#include <km_char_lcd.h>
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define DELAY_STOP_STR_MAX_LENGTH 64
@@ -436,6 +440,110 @@ static void process_fdt_options(const void *blob)
 #endif /* CONFIG_SYS_TEXT_BASE */
 }
 
+int multiboot(void)
+{
+        unsigned char choice;
+	//char *envs[] = {"EnvSD.txt","EnvMmc.txt", "EnvTFTP.txt", "EnvTFTPKGDB.txt","EnvNfs.txt"};
+
+	lcd_bootmenu(77); // LCD Menu For After Boot Delay
+
+	printf("\n\n\t #### KM Multi Boot Menu ####\n");
+        do
+        {
+                printf("\n\n1: Boot From SD Card  	[MMC0]\n");
+                printf("2: Boot From EMMC     	[MMC1]\n");
+		printf("3: Boot From Serial   	[UART0]\n");
+                printf("4: Boot From TFTP     	[Default CPSW]\n");
+                printf("5: Boot With KGDB-KDB 	[SDCARD,EMMC,TFTP] \n");
+                printf("6: Select Ethernet    	[CPSW,ENC]\n");
+		printf("0: Stay in Boot Mode\n");
+
+                printf("\nEnter Your Choice: \n");
+                choice = getchar();
+                choice -= '0';
+
+		lcd_bootmenu(choice);
+		if (choice < 0 || choice > 7)
+                {
+                        printf("Wrong Choice\n");
+                        continue;
+                }
+
+		switch(choice) {
+			case 0:
+			        printf("Stay @ Uboot mode\n");
+			        break;
+			case 1:
+			        //printf("autoboot:%s\n",KM_UENV_SDCARD);
+			        run_command_list(KM_UENV_SDCARD, -1, 0);
+			        return 1;
+			        break;
+			case 2:
+			        //printf("autoboot:%s\n",KM_UENV_EMMC);
+			        run_command_list(KM_UENV_EMMC, -1, 0);
+			        return 1;
+			case 3:
+				printf("\n\n\t1: Serial booting with zimage & dtb \n");
+				printf("\t2: Serial booting Wthout zimage & with dtb\n");
+				printf("\n\tEnter Your Choice: \n");
+				choice = getchar();
+				choice -= '0';
+				if (choice == 1)
+					run_command_list(KM_SERIAL_ZIMAGE_DTB , -1, 0);
+				if (choice == 2)
+					run_command_list(KM_SERIAL_DTB , -1, 0);
+				break;
+			case 4:
+			        //printf("autoboot:%s\n",KM_UENV_TFTP);
+			        run_command_list(KM_UENV_TFTP , -1, 0);
+			        printf("********** END *****************\n");
+			        return 1;
+			case 5:
+				//printf("autoboot:%s\n",KM_UENV_TFTP_KGDB);
+				//printf("autoboot:%s\n",KM_UENV_TFTP);
+				printf("\n\n\t1: SDCARD [MMC0]\n");
+				printf("\t2: eMMC   [MMC1]\n");
+				printf("\t3: TFTP \n");
+				printf("\n\tEnter Your Choice: \n");
+				choice = getchar();
+				choice -= '0';
+				if (choice == 1) {
+				        run_command_list(KM_UENV_SDCARD_KGDB, -1, 0);
+				        run_command_list(KM_UENV_SDCARD, -1, 0);
+				}
+				if (choice == 2) {
+				        run_command_list(KM_UENV_EMMC_KGDB, -1, 0);
+				        run_command_list(KM_UENV_EMMC, -1, 0);
+				}
+				if (choice == 3) {
+				        run_command_list(KM_UENV_TFTP_KGDB, -1, 0);
+				        run_command_list(KM_UENV_TFTP, -1, 0);
+				}
+			        printf("********** END *****************\n");
+			        return 1;
+			case 6:
+	                        printf("\n\n\t1: Select CPSW [BBB Ethernet]\n");
+	                        printf("\t2: Select ENC28J60 [SPI to Ethernet]]\n");
+	                        printf("\n\tEnter Your Choice: \n");
+			        choice = getchar();
+			        choice -= '0';
+			        if (choice == 1)
+					run_command_list(KM_ETHACT_CPSW , -1, 0);
+			        if (choice == 2)
+					run_command_list(KM_ETHACT_ENC , -1, 0);
+			        continue;
+			default :
+			        printf("Wrong Choice\n");
+			        continue;
+		}
+
+                return 0;
+        } while(1);
+
+        return 0;
+}
+
+
 const char *bootdelay_process(void)
 {
 	char *s;
@@ -486,11 +594,23 @@ void autoboot_command(const char *s)
 		if (lock)
 			prev = disable_ctrlc(1); /* disable Ctrl-C checking */
 
-		run_command_list(s, -1, 0);
+		lcd_bootmenu(2);
+		run_command_list(KM_UENV_EMMC, -1, 0);
+		//run_command_list(s, -1, 0);
+
 
 		if (lock)
 			disable_ctrlc(prev);	/* restore Ctrl-C checking */
 	}
+
+	run_command_list(KM_UENV, -1, 0); // load uEnv.txt file from /boot folder
+	if(multiboot())
+        {
+                //s = env_get ("bootcmd");
+		printf("autoboot:%s\n",s);
+		run_command_list(s, -1, 0);
+        }
+
 
 	if (IS_ENABLED(CONFIG_AUTOBOOT_USE_MENUKEY) &&
 	    menukey == AUTOBOOT_MENUKEY) {
