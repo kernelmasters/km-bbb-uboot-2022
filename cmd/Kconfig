@@ -976,6 +976,11 @@ config CMD_GPIO
 	help
 	  GPIO support.
 
+config CMD_LCD
+        bool "lcd"
+        help
+          GPIO support
+
 config CMD_PWM
 	bool "pwm"
 	depends on DM_PWM
