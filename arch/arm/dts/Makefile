@@ -395,7 +395,8 @@ dtb-$(CONFIG_AM33XX) += \
 	am335x-base0033.dtb \
 	am335x-guardian.dtb \
 	am335x-wega-rdk.dtb \
-	am335x-regor-rdk.dtb
+	am335x-regor-rdk.dtb \
+	km-bbb-am335x-boneblack.dtb
 dtb-$(CONFIG_AM43XX) += am437x-gp-evm.dtb am437x-sk-evm.dtb	\
 	am43x-epos-evm.dtb \
 	am437x-idk-evm.dtb \
