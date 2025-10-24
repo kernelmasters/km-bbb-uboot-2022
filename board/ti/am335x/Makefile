@@ -9,3 +9,4 @@ obj-y	:= mux.o
 endif
 
 obj-y	+= board.o
+obj-$(CONFIG_KM_BBB_2x16_CHAR_LCD) += km_char_lcd.o
