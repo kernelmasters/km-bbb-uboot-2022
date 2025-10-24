@@ -30,6 +30,10 @@
 #include <km_bbb_bootenv.h>
 #include <km_char_lcd.h>
 
+#ifdef CONFIG_KM_BBB_ENC28J60
+int enc28j60_initialize(unsigned int, unsigned int, unsigned int, unsigned int);
+#endif
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define DELAY_STOP_STR_MAX_LENGTH 64
@@ -607,6 +611,9 @@ void autoboot_command(const char *s)
 			disable_ctrlc(prev);	/* restore Ctrl-C checking */
 	}
 
+#ifdef CONFIG_KM_BBB_ENC28J60
+	enc28j60_initialize(1,0,16000000,0);
+#endif
 	run_command_list(KM_UENV, -1, 0); // load uEnv.txt file from /boot folder
 	if(multiboot())
         {

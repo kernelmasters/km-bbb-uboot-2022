@@ -3,6 +3,7 @@
 # (C) Copyright 2006
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
 
+obj-$(CONFIG_KM_BBB_ENC28J60) += enc28j60.o
 
 obj-$(CONFIG_AG7XXX) += ag7xxx.o
 obj-$(CONFIG_ALTERA_TSE) += altera_tse.o
