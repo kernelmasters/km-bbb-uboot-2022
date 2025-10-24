@@ -456,6 +456,7 @@ int multiboot(void)
                 printf("4: Boot From TFTP     	[Default CPSW]\n");
                 printf("5: Boot With KGDB-KDB 	[SDCARD,EMMC,TFTP] \n");
                 printf("6: Select Ethernet    	[CPSW,ENC]\n");
+                printf("7: Self diagnostic test\n");
 		printf("0: Stay in Boot Mode\n");
 
                 printf("\nEnter Your Choice: \n");
@@ -463,7 +464,7 @@ int multiboot(void)
                 choice -= '0';
 
 		lcd_bootmenu(choice);
-		if (choice < 0 || choice > 7)
+		if (choice < 0 || choice >= 7)
                 {
                         printf("Wrong Choice\n");
                         continue;
@@ -532,6 +533,9 @@ int multiboot(void)
 			        if (choice == 2)
 					run_command_list(KM_ETHACT_ENC , -1, 0);
 			        continue;
+			case 7:
+			        printf(" Self diagnostic test \n");
+			        break;
 			default :
 			        printf("Wrong Choice\n");
 			        continue;

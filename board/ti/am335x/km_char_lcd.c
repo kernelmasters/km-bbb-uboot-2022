@@ -172,6 +172,12 @@ int lcd_bootmenu(int Boot_Selection){
 			 HD44780_Str_XY(0,1,"                ");
                          HD44780_Str_XY(0,1,"Boot from SERIAL");
                          break;
+                case SELF_DIAGNOSTIC_TEST:
+			 HD44780_Str_XY(0, 0, "  Boot Sequence ");
+			 HD44780_Str_XY(0, 1, "                ");
+                         HD44780_Str_XY(0, 1, " SELF_DIAGNOSTIC_TEST");
+			 All_Test_Cases();
+                         break;
                 default:
                          HD44780_ClrScr();
                          HD44780_Str_XY(0, 1, "Choice Corect opt");

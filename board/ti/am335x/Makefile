@@ -10,3 +10,5 @@ endif
 
 obj-y	+= board.o
 obj-$(CONFIG_KM_BBB_2x16_CHAR_LCD) += km_char_lcd.o
+# TODO: KK: KM-BBB: Make the below depend on a CONFIG option
+obj-y   += km_bbb_selfdiagnostic.o
