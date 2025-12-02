@@ -247,6 +247,11 @@ static int passwd_abort_key(uint64_t etime)
 	int presskey_max = 0;
 	int i;
 
+	/* --- NEW: for countdown --- */
+	uint64_t start = get_ticks();
+	unsigned long tbclk = get_tbclk();
+	unsigned int last_secs_left = ~0U;   /* invalid to force first print */
+
 #  ifdef CONFIG_AUTOBOOT_DELAY_STR
 	if (delaykey[0].str == NULL)
 		delaykey[0].str = CONFIG_AUTOBOOT_DELAY_STR;
@@ -301,7 +306,33 @@ static int passwd_abort_key(uint64_t etime)
 				abort = 1;
 			}
 		}
+
+        /* --- NEW: update visible countdown --- */
+#ifdef CONFIG_AUTOBOOT_PROMPT
+        if (!abort && tbclk) {
+            uint64_t now = get_ticks();
+            if (now > etime)
+                now = etime;
+
+            /* how many whole seconds remain? */
+            unsigned int secs_left = (unsigned int)((etime - now) / tbclk);
+
+            if (secs_left != last_secs_left) {
+                last_secs_left = secs_left;
+
+                /* single-line style: rewrite in place */
+                printf("\r");
+                printf(CONFIG_AUTOBOOT_PROMPT, secs_left);
+            }
+        }
+#endif
 	} while (!abort && get_ticks() <= etime);
+
+#ifdef CONFIG_AUTOBOOT_PROMPT
+	printf("\n");
+	if(!abort)
+		printf("Continuing to boot from default boot device\n");
+#endif
 
 	return abort;
 }
@@ -346,13 +377,13 @@ static int abortboot_key_sequence(int bootdelay)
 
 	if (IS_ENABLED(CONFIG_AUTOBOOT_FLUSH_STDIN))
 		flush_stdin();
-#  ifdef CONFIG_AUTOBOOT_PROMPT
+#ifdef CONFIG_AUTOBOOT_PROMPT
 	/*
 	 * CONFIG_AUTOBOOT_PROMPT includes the %d for all boards.
 	 * To print the bootdelay value upon bootup.
 	 */
 	printf(CONFIG_AUTOBOOT_PROMPT, bootdelay);
-#  endif
+#endif
 
 	if (IS_ENABLED(CONFIG_AUTOBOOT_ENCRYPTION)) {
 		if (IS_ENABLED(CONFIG_CRYPT_PW) && !fallback_to_sha256())
