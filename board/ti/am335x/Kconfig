@@ -19,6 +19,13 @@ config NOR
 	  In practice this is seen as a NOR flash module connected to the
 	  "memory cape" for the BeagleBone family.
 
+config KM_BBB_2x16_CHAR_LCD
+	bool "Enable KM BBB Expansion board's 2x16 character LCD"
+	default n
+	help
+	  This option will enable the 2x16 character LCD on the expansion
+	  board for BeagleBone Black developed by Kernel Masters.
+
 source "board/ti/common/Kconfig"
 
 endif

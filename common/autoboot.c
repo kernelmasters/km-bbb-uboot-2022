@@ -26,6 +26,14 @@
 #include <crypt.h>
 #include <dm/ofnode.h>
 
+// Kernel Masters BBB headers
+#include <km_bbb_bootenv.h>
+#include <km_char_lcd.h>
+
+#ifdef CONFIG_KM_BBB_ENC28J60
+int enc28j60_initialize(unsigned int, unsigned int, unsigned int, unsigned int);
+#endif
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define DELAY_STOP_STR_MAX_LENGTH 64
@@ -239,6 +247,11 @@ static int passwd_abort_key(uint64_t etime)
 	int presskey_max = 0;
 	int i;
 
+	/* for countdown --- */
+	uint64_t start = get_ticks();
+	unsigned long tbclk = get_tbclk();
+	unsigned int last_secs_left = ~0U;   /* invalid to force first print */
+
 #  ifdef CONFIG_AUTOBOOT_DELAY_STR
 	if (delaykey[0].str == NULL)
 		delaykey[0].str = CONFIG_AUTOBOOT_DELAY_STR;
@@ -293,7 +306,33 @@ static int passwd_abort_key(uint64_t etime)
 				abort = 1;
 			}
 		}
+
+        /* update visible countdown */
+#ifdef CONFIG_AUTOBOOT_PROMPT
+        if (!abort && tbclk) {
+            uint64_t now = get_ticks();
+            if (now > etime)
+                now = etime;
+
+            /* how many whole seconds remain? */
+            unsigned int secs_left = (unsigned int)((etime - now) / tbclk);
+
+            if (secs_left != last_secs_left) {
+                last_secs_left = secs_left;
+
+                /* single-line style: rewrite in place */
+                printf("\r");
+                printf(CONFIG_AUTOBOOT_PROMPT, secs_left);
+            }
+        }
+#endif
 	} while (!abort && get_ticks() <= etime);
+
+#ifdef CONFIG_AUTOBOOT_PROMPT
+	printf("\n");
+	if(!abort)
+		printf("Continuing to boot from default boot device\n");
+#endif
 
 	return abort;
 }
@@ -436,6 +475,114 @@ static void process_fdt_options(const void *blob)
 #endif /* CONFIG_SYS_TEXT_BASE */
 }
 
+int multiboot(void)
+{
+        unsigned char choice;
+	//char *envs[] = {"EnvSD.txt","EnvMmc.txt", "EnvTFTP.txt", "EnvTFTPKGDB.txt","EnvNfs.txt"};
+
+	lcd_bootmenu(77); // LCD Menu For After Boot Delay
+
+	printf("\n\n\t #### KM Multi Boot Menu ####\n");
+        do
+        {
+                printf("\n\n1: Boot From SD Card  	[MMC0]\n");
+                printf("2: Boot From EMMC     	[MMC1]\n");
+		printf("3: Boot From Serial   	[UART0]\n");
+                printf("4: Boot From TFTP     	[Default CPSW]\n");
+                printf("5: Boot With KGDB-KDB 	[SDCARD,EMMC,TFTP] \n");
+                printf("6: Select Ethernet    	[CPSW,ENC]\n");
+                printf("7: Self diagnostic test\n");
+		printf("0: Stay in Boot Mode\n");
+
+                printf("\nEnter Your Choice: \n");
+                choice = getchar();
+                choice -= '0';
+
+		lcd_bootmenu(choice);
+		if (choice < 0 || choice >= 7)
+                {
+                        printf("Wrong Choice\n");
+                        continue;
+                }
+
+		switch(choice) {
+			case 0:
+			        printf("Stay @ Uboot mode\n");
+			        break;
+			case 1:
+			        //printf("autoboot:%s\n",KM_UENV_SDCARD);
+			        run_command_list(KM_UENV_SDCARD, -1, 0);
+			        return 1;
+			        break;
+			case 2:
+			        //printf("autoboot:%s\n",KM_UENV_EMMC);
+			        run_command_list(KM_UENV_EMMC, -1, 0);
+			        return 1;
+			case 3:
+				printf("\n\n\t1: Serial booting with zimage & dtb \n");
+				printf("\t2: Serial booting Wthout zimage & with dtb\n");
+				printf("\n\tEnter Your Choice: \n");
+				choice = getchar();
+				choice -= '0';
+				if (choice == 1)
+					run_command_list(KM_SERIAL_ZIMAGE_DTB , -1, 0);
+				if (choice == 2)
+					run_command_list(KM_SERIAL_DTB , -1, 0);
+				break;
+			case 4:
+			        //printf("autoboot:%s\n",KM_UENV_TFTP);
+			        run_command_list(KM_UENV_TFTP , -1, 0);
+			        printf("********** END *****************\n");
+			        return 1;
+			case 5:
+				//printf("autoboot:%s\n",KM_UENV_TFTP_KGDB);
+				//printf("autoboot:%s\n",KM_UENV_TFTP);
+				printf("\n\n\t1: SDCARD [MMC0]\n");
+				printf("\t2: eMMC   [MMC1]\n");
+				printf("\t3: TFTP \n");
+				printf("\n\tEnter Your Choice: \n");
+				choice = getchar();
+				choice -= '0';
+				if (choice == 1) {
+				        run_command_list(KM_UENV_SDCARD_KGDB, -1, 0);
+				        run_command_list(KM_UENV_SDCARD, -1, 0);
+				}
+				if (choice == 2) {
+				        run_command_list(KM_UENV_EMMC_KGDB, -1, 0);
+				        run_command_list(KM_UENV_EMMC, -1, 0);
+				}
+				if (choice == 3) {
+				        run_command_list(KM_UENV_TFTP_KGDB, -1, 0);
+				        run_command_list(KM_UENV_TFTP, -1, 0);
+				}
+			        printf("********** END *****************\n");
+			        return 1;
+			case 6:
+	                        printf("\n\n\t1: Select CPSW [BBB Ethernet]\n");
+	                        printf("\t2: Select ENC28J60 [SPI to Ethernet]]\n");
+	                        printf("\n\tEnter Your Choice: \n");
+			        choice = getchar();
+			        choice -= '0';
+			        if (choice == 1)
+					run_command_list(KM_ETHACT_CPSW , -1, 0);
+			        if (choice == 2)
+					run_command_list(KM_ETHACT_ENC , -1, 0);
+			        continue;
+			case 7:
+			        printf(" Self diagnostic test \n");
+			        break;
+			default :
+			        printf("Wrong Choice\n");
+			        continue;
+		}
+
+                return 0;
+        } while(1);
+
+        return 0;
+}
+
+
 const char *bootdelay_process(void)
 {
 	char *s;
@@ -486,11 +633,26 @@ void autoboot_command(const char *s)
 		if (lock)
 			prev = disable_ctrlc(1); /* disable Ctrl-C checking */
 
-		run_command_list(s, -1, 0);
+		lcd_bootmenu(2);
+		run_command_list(KM_UENV_EMMC, -1, 0);
+		//run_command_list(s, -1, 0);
+
 
 		if (lock)
 			disable_ctrlc(prev);	/* restore Ctrl-C checking */
 	}
+
+#ifdef CONFIG_KM_BBB_ENC28J60
+	enc28j60_initialize(1,0,16000000,0);
+#endif
+	run_command_list(KM_UENV, -1, 0); // load uEnv.txt file from /boot folder
+	if(multiboot())
+        {
+                //s = env_get ("bootcmd");
+		printf("autoboot:%s\n",s);
+		run_command_list(s, -1, 0);
+        }
+
 
 	if (IS_ENABLED(CONFIG_AUTOBOOT_USE_MENUKEY) &&
 	    menukey == AUTOBOOT_MENUKEY) {
