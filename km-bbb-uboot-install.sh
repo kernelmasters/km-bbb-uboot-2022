@@ -78,6 +78,8 @@ while [ ! -z "$1" ] ; do
 		echo "${Red}u-boot.img: dd if=u-boot.img of=$2 count=4 seek=1 bs=384k${NC}"
 		dd if=u-boot.img of=${media} count=4 seek=1 bs=384k
 		echo "${Green}-----------------------------${NC}"
+
+		sync
                 ;;
         --scp)
                 if [ $# -le 2 ] ; then
